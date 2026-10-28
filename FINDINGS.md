@@ -65,13 +65,21 @@ adds no timeline event. The schema also defines pending suggestions for types,
 labels, assignees and closing, with `applyPendingIssueSuggestions` and
 `rejectPendingIssueSuggestions`.
 
+In the web UI the suggestion appears above the issue body as an **"Agent
+suggestions" (Public preview)** panel showing `Stage → Submitted` with
+**Decline all** and **Accept all**. It is labelled as an agent suggestion even
+though it was sent with the owner's personal token, and the rationale is not
+shown on the panel itself. The timeline groups the three field changes into one
+entry: "updated Deadline 2026-11-21, Effort 6 and Stage Drafting".
+
 ## Open questions
 
 - Will `GITHUB_TOKEN` be able to read and set issue types on personal
   repositories? If not, could the API return an error instead of success?
 - Could the `FORBIDDEN` error name the missing `user` scope, and the reserved-name
   error list the reserved names?
-- Where are pending suggestions shown to the issue author in the UI?
+- Can the panel show who proposed a value and its rationale? A suggestion sent
+  with a personal token is currently presented as an agent's.
 - Will automation be able to propose types and fields as pending suggestions
   with `GITHUB_TOKEN`, so maintainers review bot classifications instead of
   receiving them silently?

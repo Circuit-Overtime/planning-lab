@@ -31,17 +31,47 @@ Evidence: [#3](https://github.com/Circuit-Overtime/planning-lab/issues/3) and
 Impact: Actions-based triage on personal repositories cannot classify issues,
 and nothing in the response tells the workflow author why.
 
-## 4. Creating types and fields through the API
+## 4. Creating types and fields needs the `user` scope
 
 `createIssueType` and `createIssueField` with the personal account as
 `ownerId` return `FORBIDDEN` for a token with `repo`, `workflow` and
-`admin:org` scopes. Whether the `user` scope is enough is still to be tested.
+`admin:org` scopes. After adding the `user` scope, both succeed: the account
+now has a **CFP** type and **Deadline** (date), **Effort** (number) and
+**Stage** (single select: Drafting, Submitted, Accepted, Rejected, Delivered)
+fields. The error does not name the missing scope.
+
+## 5. Reserved field names
+
+`Status`, `Type`, `Assignee`, `Labels`, `Milestone` and `Title` are rejected
+with "Name cannot have a reserved value". `Priority` is accepted. `Status` is
+the most natural name for a planning field, so `Stage` is used here; the
+reserved list is not shown in the API error.
+
+## 6. Field values through the API
+
+On [#5](https://github.com/Circuit-Overtime/planning-lab/issues/5), the owner's
+token set type `CFP` (REST) and Deadline `2026-11-21`, Effort `6` and Stage
+`Drafting` (GraphQL `createIssueFieldValue`). All four read back correctly, and
+the timeline records one `IssueTypeAddedEvent` and three
+`IssueFieldAddedEvent`s.
+
+## 7. Suggested values wait for review
+
+`createIssueFieldValue` with `suggest: true`, a `rationale` and
+`confidence: MEDIUM` proposing Stage = Submitted returned success but left Stage
+at Drafting. The proposal is stored in `issue.pendingSuggestions` as a
+`PendingFieldSuggestion` with its rationale, author and suggested value, and
+adds no timeline event. The schema also defines pending suggestions for types,
+labels, assignees and closing, with `applyPendingIssueSuggestions` and
+`rejectPendingIssueSuggestions`.
 
 ## Open questions
 
 - Will `GITHUB_TOKEN` be able to read and set issue types on personal
   repositories? If not, could the API return an error instead of success?
-- Which token scope creates personal issue types and fields?
-- The field-value input already accepts `suggest`, `rationale` and
-  `confidence`. Will suggested values be visible to the issue author before
-  they are applied?
+- Could the `FORBIDDEN` error name the missing `user` scope, and the reserved-name
+  error list the reserved names?
+- Where are pending suggestions shown to the issue author in the UI?
+- Will automation be able to propose types and fields as pending suggestions
+  with `GITHUB_TOKEN`, so maintainers review bot classifications instead of
+  receiving them silently?

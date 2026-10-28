@@ -1,0 +1,38 @@
+name: Classify issue
+
+on:
+  issues:
+    types: [opened, edited]
+
+permissions:
+  issues: write
+
+concurrency:
+  group: classify-${{ github.event.issue.number }}
+  cancel-in-progress: true
+
+jobs:
+  classify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Set the issue type from the form's Kind
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BODY: ${{ github.event.issue.body }}
+          NUMBER: ${{ github.event.issue.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          kind=$(printf '%s\n' "$BODY" | tr -d '\r' | awk '/^### Kind$/{getline; getline; print; exit}')
+          if [ -z "$kind" ]; then
+            echo "No Kind section; leaving the issue unclassified." | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          available=$(gh api graphql -f query='query($o:String!,$n:String!){repository(owner:$o,name:$n){issueTypes(first:50){nodes{name isEnabled}}}}' \
+            -f o="${REPO%/*}" -f n="${REPO#*/}" --jq '[.data.repository.issueTypes.nodes[]|select(.isEnabled).name]|join(",")')
+          case ",$available," in
+            *",$kind,"*) ;;
+            *) echo "Kind '$kind' is not an enabled issue type ($available)." | tee -a "$GITHUB_STEP_SUMMARY"; exit 1 ;;
+          esac
+          gh api -X PATCH "repos/$REPO/issues/$NUMBER" -f type="$kind" \
+            --jq '"Issue #\(.number) type set to \(.type.name) with GITHUB_TOKEN."' | tee -a "$GITHUB_STEP_SUMMARY"

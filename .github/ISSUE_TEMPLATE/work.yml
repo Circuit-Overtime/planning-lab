@@ -1,0 +1,19 @@
+name: Work item
+description: Plan a piece of work; the classify workflow sets its issue type from Kind.
+body:
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind
+      options:
+        - Task
+        - Bug
+        - Feature
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Details
+    validations:
+      required: true

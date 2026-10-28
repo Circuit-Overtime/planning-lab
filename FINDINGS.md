@@ -39,8 +39,8 @@ and nothing in the response tells the workflow author why.
 
 ## Open questions
 
-- Is `GITHUB_TOKEN` access to issue types planned for personal repositories,
-  as it is for organization repositories?
+- Will `GITHUB_TOKEN` be able to read and set issue types on personal
+  repositories? If not, could the API return an error instead of success?
 - Which token scope creates personal issue types and fields?
 - The field-value input already accepts `suggest`, `rationale` and
   `confidence`. Will suggested values be visible to the issue author before
